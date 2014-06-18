@@ -15,11 +15,15 @@
 //二维数组的指针，指向存放图片的二维数组
 U16 (*frameBuffer16BitTft800480)[SCR_XSIZE_TFT_800480];
 
+void Lcd2410_Port_Init();
 void Lcd2410_Init();
 void Lcd2410_PowerEnable(int invpwren,int pwren);
 void Lcd2410_EnvidOnOff(int onoff);
 
-//LCD初始化入口函数
+
+/**************************************************************
+LCD初始化入口函数
+**************************************************************/
 void Lcd2410_Init_On(void)
 {
 	Lcd2410_Port_Init();//LCD数据和控制端口初始化
@@ -84,9 +88,17 @@ void Lcd2410_Init()
 	//[8]: VSYNC脉冲极性，0=正常，1=反向		
 	rLCDCON5=(1<<11)|(1<<9)|(1<<8);	//FRM5:6:5,HSYNC and VSYNC are inverted
 	
-	
+	//M5D(n) 屏蔽n的高位，只保留低21位
+	//LCDSADDRA1，LCDBANK[29:21]，帧地址[30:22]，获取帧地址的[30:22]位赋给其[29:21]位
+	//LCDSADDRA1，LCDBASEU[20:0]，视口地址[21:1]，获取视口地址的[21:1]位赋给其[20:0]位
+	//这里帧地址和视口地址是同一个，都是 frameBuffer16BitTft800480
 	rLCDSADDR1=(((U32)frameBuffer16BitTft800480>>22)<<21)|M5D((U32)frameBuffer16BitTft800480>>1);
+	
+	//LCDSADDRA2，LCDBASEL[20:0]，用来存放视口结束地址[21:1]
+	//LCDBASEL=LCDBASEU+(长*宽*每个像素点的字节数)
 	rLCDSADDR2=M5D( ((U32)frameBuffer16BitTft800480+(SCR_XSIZE_TFT_800480*LCD_YSIZE_TFT_800480*2))>>1 );
+	
+	
 	rLCDSADDR3=(((SCR_XSIZE_TFT_800480-LCD_XSIZE_TFT_800480)/1)<<11)|(LCD_XSIZE_TFT_800480/1);
 	
 	//[1]: 屏蔽LCD帧同步中断，0=开启，1=屏蔽
@@ -98,16 +110,19 @@ void Lcd2410_Init()
 }
 
 
-
 /**************************************************************
-800×480 8Bpp TFT LCD 电源控制引脚使能
+800×480 16Bpp TFT LCD 电源控制引脚使能
 **************************************************************/
 void Lcd2410_PowerEnable(int invpwren,int pwren)
 {
     //GPG4 is setted as LCD_PWREN
+    //GPG4 [9:8]，11=LCD_PWREN
     rGPGUP=rGPGUP&(~(1<<4))|(1<<4); // Pull-up disable
     rGPGCON=rGPGCON&(~(3<<8))|(3<<8); //GPG4=LCD_PWREN
+    
     //Enable LCD POWER ENABLE Function
+    //LCDCON5：PWREN[3]，LCD_PWREN引脚输出信号使能，0=禁止，1=允许
+    //LCDCON5：INVPWREN[5]，此位表示PWREN信号的极性，0=正常，1=反向
     rLCDCON5=rLCDCON5&(~(1<<3))|(pwren<<3);   // PWREN
     rLCDCON5=rLCDCON5&(~(1<<5))|(invpwren<<5);   // INVPWREN
 }    
@@ -118,10 +133,12 @@ LCD视频和控制信号输出或者停止，1开启视频输出
 **************************************************************/
 void Lcd2410_EnvidOnOff(int onoff)
 {
+	//LCDCON1：[0]，LCD控制信号输出使能位，1:使能，0:禁止
     if(onoff==1)
-	rLCDCON1|=1; // ENVID=ON
+		rLCDCON1|=1; // ENVID=ON
     else
-	rLCDCON1 =rLCDCON1 & 0x3fffe; // ENVID Off
+    	//其他位不变，[0]位变0
+		rLCDCON1 =rLCDCON1 & 0x3fffe; // ENVID Off
 }    
 
 /*

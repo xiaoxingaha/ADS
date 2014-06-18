@@ -228,7 +228,7 @@ extern "C" {
 #define rTCNTO3 (*(volatile unsigned *)0x51000038) //Timer count observation 3
 #define rTCNTB4 (*(volatile unsigned *)0x5100003c) //Timer count buffer 4
 #define rTCNTO4 (*(volatile unsigned *)0x51000040) //Timer count observation 4
-
+#define rTCMPB4 (*(volatile unsigned *)0x51000044) //Timer compare buffer 4
 
 // USB DEVICE
 #ifdef __BIG_ENDIAN

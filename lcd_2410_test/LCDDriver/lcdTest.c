@@ -17,47 +17,17 @@ char pre_key;
 int Time_count;
 int change_flag;
 
+void show1();
+void show2();
+
+//初始化定时器相关的
 void var_Init()
 {
-	 flag=1;
-     Time1ms = 0 ;
+	 flag=1;//切换图片标志
+     Time1ms = 0 ;//定时器计时
 	 pre_key='1';
-	 Time_count=Time_1s;
+	 Time_count=Time_1s;//定时器计时上限1000
 	 change_flag=0;
-}
-
-void show1()
-{
-	int i,j;
-	
-	
-		for(i = 0;i < 480;i++)
-	   {
-		   for(j = 0;j < 800;j++)
-		  {
-			  frameBuffer16BitTft800480[i][j] = FF1[i][j];
-		  }
-	   }
-		++flag;
-		rTCON |= (1 << 20) ; //Timer4 start
-		
-	
-}
-
-void show2()
-{
-    int i,j;
-	for(i = 0;i < 480;i++)
-	{
-		for(j = 0;j < 800;j++)
-		{
-			frameBuffer16BitTft800480[i][j] = FF2[i][j];
-		}
-	}	
-		--flag;
-		rTCON |= (1 << 20) ; //Timer4 start
-	
-	
 }
 
 
@@ -65,25 +35,65 @@ void lcdTest()
 {
  	U16 col = 0x1234;
  
- 	//LCD初始化函数
-	Lcd2410_Init_On();
+	Lcd2410_Init_On(); 	//LCD初始化入口函数
 	show1();
 	while(1)
 	{
-		if(Time1ms>=Time_count)
+		if(Time1ms>=Time_count)//定时器超时
 		{
+			//Timer4 start/stop,[20]，决定定时器4的开关，0=关，1=开
 			rTCON &= ~(1 << 20) ; //Timer4 end
-			Time1ms=0;
-			if(flag==1)
-			show1();
-			if(flag==2)
-			show2();
+			
+			Time1ms=0;//定时器计时清零
+			
+			if(flag==1)//切换图片
+			{
+				show1();
+				flag = 2;
+			}
+			else
+			{
+				show2();
+				flag = 1;
+			}	
 		}
 	}
 }
 
+
+void show1()
+{
+	int i,j;
+	for(i = 0;i < 480;i++)
+	{
+		for(j = 0;j < 800;j++)
+		{
+			//将图片中的像素点值赋给帧内存
+			frameBuffer16BitTft800480[i][j] = FF1[i][j];
+		}
+	}
+	//++flag;
+	rTCON |= (1 << 20) ; //Timer4 start
+}
+
+
+void show2()
+{
+	int i,j;
+	for(i = 0;i < 480;i++)
+	{
+		for(j = 0;j < 800;j++)
+		{
+			frameBuffer16BitTft800480[i][j] = FF2[i][j];
+		}
+	}
+	//--flag;
+	rTCON |= (1 << 20) ; //Timer4 start
+}
+
+
 //时钟中断服务程序
-//没1ms进来一次，Time1ms变量自加1
+//每1ms进来一次，Time1ms变量自加1
 void __irq Timer4Int()
 {
     rSRCPND = BIT_TIMER4; //清除中断源挂起寄存器
@@ -91,6 +101,8 @@ void __irq Timer4Int()
     Time1ms ++ ;
 	
 }
+
+
 //串口中断服务函数
 //当有数据到来时触发
 void __irq RxInt()
