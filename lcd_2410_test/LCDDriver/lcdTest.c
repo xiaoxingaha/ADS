@@ -9,6 +9,7 @@ int const Time_1s= 1000;
 int const Time_half_s= 10000;
 void Lcd2410_Init_On(void);
 extern U16 (*frameBuffer16BitTft800480)[SCR_XSIZE_TFT_800480];
+extern unsigned char __CHS[];
 
 
 short int flag;
@@ -19,6 +20,10 @@ int change_flag;
 
 void show1();
 void show2();
+void PutPixel(U32 x,U32 y, U16 c );
+void Lcd_ClearScr(U32 c);
+void Lcd_Print_ZW(U32 x,U32 y,U16 QW,U32 c);
+
 
 //初始化定时器相关的
 void var_Init()
@@ -35,7 +40,13 @@ void lcdTest()
 {
  	U16 col = 0x1234;
  
-	Lcd2410_Init_On(); 	//LCD初始化入口函数
+	Lcd2410_Init_On();//LCD初始化入口函数
+	Lcd_ClearScr(0xFFFF);//清屏
+	while(1)
+	{
+		Lcd_Print_ZW(100,60,(54<<8)+48,0);
+		Lcd_Print_ZW(100,80,(27<<8)+10,0);
+	}
 	show1();
 	while(1)
 	{
@@ -89,6 +100,71 @@ void show2()
 	}
 	//--flag;//切换图片
 	rTCON |= (1 << 20) ; //Timer4 start
+}
+
+
+/*********************************************************
+TFT LCD单个像素的显示数据输出
+*********************************************************/
+void PutPixel(U32 x,U32 y, U16 c )
+{
+	if ( (x < 800) && (y < 480) )
+		frameBuffer16BitTft800480[(y)][(x)] = c;
+}
+
+
+/**********************************************************
+TFT LCD全屏填充特定颜色单元或清屏
+**********************************************************/
+void Lcd_ClearScr(U32 c)
+{
+	U32 x,y ;
+		
+    for( y = 0 ; y < 480 ; y++ )
+    {
+    	for( x = 0 ; x < 800 ; x++ )
+    	{
+			frameBuffer16BitTft800480[y][x] = c ;
+    	}
+    }
+}
+
+
+/**********************************************************
+TFT LCD显示汉字
+**********************************************************/
+void Lcd_Print_ZW(U32 x,U32 y,U16 QW,U32 c)
+{
+       U16 i,j;
+       U8 *pZK,mask,buf;
+
+       pZK = &__CHS[ (  ( (QW >> 8) - 1 )*94 + (QW & 0x00FF)- 1 )*32 ];
+       for( i = 0 ; i < 16 ; i++ )
+       {
+              //左
+              mask = 0x80;
+              buf = pZK[i*2];
+              for( j = 0 ; j < 8 ; j++ )
+              {
+                     if( buf & mask )
+                     {
+                            PutPixel(x+j,y+i,c);
+                     }
+                     mask = mask >> 1;
+              } 
+        
+              //右
+              mask = 0x80;
+              buf = pZK[i*2 + 1];
+              for( j = 0 ; j < 8 ; j++ )
+              {
+                     if( buf & mask )
+                     {
+                            PutPixel(x+j + 8,y+i,c);
+                     }
+                    mask = mask >> 1;
+              }                 
+       }
 }
 
 

@@ -1,4 +1,4 @@
-﻿#ifndef __DATA2_H__
+#ifndef __DATA2_H__
 #define __DATA2_H__
 U16 FF2[480][800] = {
 0x24ba,
