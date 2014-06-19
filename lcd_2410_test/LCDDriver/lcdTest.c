@@ -72,7 +72,7 @@ void show1()
 			frameBuffer16BitTft800480[i][j] = FF1[i][j];
 		}
 	}
-	//++flag;
+	//++flag;//ÇÐ»»Í¼Æ¬
 	rTCON |= (1 << 20) ; //Timer4 start
 }
 
@@ -87,7 +87,7 @@ void show2()
 			frameBuffer16BitTft800480[i][j] = FF2[i][j];
 		}
 	}
-	//--flag;
+	//--flag;//ÇÐ»»Í¼Æ¬
 	rTCON |= (1 << 20) ; //Timer4 start
 }
 
