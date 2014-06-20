@@ -7,7 +7,7 @@
 #include "locale.h"
 
 void Isr_Init(void);
-void Timer4_Init();//定时器4初始化
+void Timer4_Init(void);//定时器4初始化
 void HaltUndef(void);
 void HaltSwi(void);
 void HaltPabort(void);
@@ -17,8 +17,8 @@ unsigned __rt_heap_extend(unsigned size, void ** block)
 {
 	return 0;
 }
-void RxInt();//串口中断服务函数初始化
-void Timer4Int();//定时器4中断服务函数初始化
+void RxInt(void);//串口中断服务函数初始化
+void Timer4Int(void);//定时器4中断服务函数初始化
 
 void Main(void)
 {
